@@ -1,48 +1,46 @@
-"""
-Token definitions for TinyLang compiler
-Each token represents a meaningful unit in the source code
-"""
-
 from enum import Enum, auto
 from dataclasses import dataclass
 from typing import Any, Optional
 
 
 class TokenType(Enum):
-    """All possible token types in our language"""
     
     # Literals
-    NUMBER = auto()      # 123, 45.67
-    IDENTIFIER = auto()  # variable names: x, count, myVar
+    NUMBER = auto()     
+    IDENTIFIER = auto()  
+    STRING = auto()      
     
     # Keywords
-    IF = auto()          # if
-    PRINT = auto()       # print
+    IF = auto()         
+    ELSE = auto()       
+    WHILE = auto()      
+    PRINT = auto()     
     
     # Operators
-    PLUS = auto()        # +
-    MINUS = auto()       # -
-    MULTIPLY = auto()    # *
-    DIVIDE = auto()      # /
-    ASSIGN = auto()      # =
+    PLUS= auto()      
+    MINUS= auto()      
+    MULTIPLY= auto()    
+    DIVIDE= auto()      
+    ASSIGN= auto()      
     
     # Comparison
-    EQUAL = auto()       # ==
-    NOT_EQUAL = auto()   # !=
-    GREATER = auto()     # >
-    LESS = auto()        # 
-    GREATER_EQ = auto()  # >=
-    LESS_EQ = auto()     # <=
+    EQUAL = auto()      
+    NOT_EQUAL = auto()  
+    GREATER= auto()    
+    LESS= auto()
+    GREATER_EQ = auto()  
+    LESS_EQ = auto()    
     
     # Delimiters
-    SEMICOLON = auto()   # ;
-    LPAREN = auto()      # (
-    RPAREN = auto()      # )
-    LBRACE = auto()      # {
-    RBRACE = auto()      # }
+    SEMICOLON = auto()   
+    LPAREN = auto()     
+    RPAREN = auto()      
+    LBRACE = auto()      
+    RBRACE = auto()      
+    COMMA = auto()       
     
     # Special
-    EOF = auto()         # End of file
+    EOF = auto()        
     
 
 @dataclass
@@ -65,9 +63,11 @@ class Token:
         return f'Token({self.type.name}, {self.value!r}, {self.line}:{self.column})'
 
 
-# Keywords mapping - for identifying reserved words
+# Keywords mapping - 
 KEYWORDS = {
     'if': TokenType.IF,
+    'else': TokenType.ELSE,
+    'while': TokenType.WHILE,
     'print': TokenType.PRINT,
 }
 

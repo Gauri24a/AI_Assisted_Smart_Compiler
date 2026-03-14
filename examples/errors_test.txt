@@ -1,0 +1,5 @@
+// Test with intentional errors
+x = 5;
+y = @invalid;  // Invalid character
+z = "unterminated string
+a = 10;

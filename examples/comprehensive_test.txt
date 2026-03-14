@@ -1,0 +1,76 @@
+// Comprehensive Test Program for TinyLang
+// Tests all language features
+
+// Variable assignments
+x = 10;
+y = 20;
+z = x + y;
+name = "TinyLang";
+message = "Hello World";
+
+// Arithmetic operations
+sum = x + y;
+diff = y - x;
+product = x * y;
+quotient = y / x;
+
+// Comparison operators
+a = 5;
+b = 10;
+is_equal = a == b;
+not_equal = a != b;
+greater = b > a;
+less = a < b;
+greater_eq = b >= a;
+less_eq = a <= b;
+
+// If statement
+if (x > 5) {
+    result = 1;
+    print("x is greater than 5");
+}
+
+// If-else statement
+if (y < 15) {
+    print("y is small");
+} else {
+    print("y is large");
+}
+
+// Nested if
+if (x > 0) {
+    if (y > 0) {
+        print("Both positive");
+    }
+}
+
+// While loop
+counter = 0;
+while (counter < 5) {
+    print(counter);
+    counter = counter + 1;
+}
+
+// Complex expressions
+result = (x + y) * z - a / b;
+complex = x * y + z / a - b;
+
+// String handling
+greeting = "Hello, ";
+name2 = "World!";
+print(greeting);
+print(name2);
+
+// Comments testing
+// This is a single line comment
+
+/* This is a 
+   multi-line comment
+   spanning multiple lines */
+
+x = 42; // inline comment
+
+/* Nested /* comments */ are not supported */
+
+// Final test
+print("Program completed successfully!");
