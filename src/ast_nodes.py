@@ -1,49 +1,83 @@
+from dataclasses import dataclass
+from typing import List, Optional, Union
+
+
 class ASTNode:
-    """Base class for all AST nodes"""
-    pass
+    """Base class for all AST nodes."""
 
+
+@dataclass
 class NumberNode(ASTNode):
-    """Represents a number: 42, 3.14"""
-    def __init__(self, value):
-        self.value = value
+    """Represents a number literal, e.g. 42 or 3.14."""
 
+    value: Union[int, float]
+
+
+@dataclass
+class StringNode(ASTNode):
+    """Represents a string literal."""
+
+    value: str
+
+
+@dataclass
 class VariableNode(ASTNode):
-    """Represents a variable: x, count"""
-    def __init__(self, name):
-        self.name = name
+    """Represents a variable reference, e.g. x or counter."""
 
+    name: str
+
+
+@dataclass
+class UnaryOpNode(ASTNode):
+    """Represents unary operations, e.g. -x."""
+
+    operator: str
+    operand: ASTNode
+
+
+@dataclass
 class BinaryOpNode(ASTNode):
-    """Represents binary operations: x + y"""
-    def __init__(self, left, operator, right):
-        self.left = left
-        self.operator = operator
-        self.right = right
+    """Represents binary operations, e.g. x + y or a >= b."""
 
+    left: ASTNode
+    operator: str
+    right: ASTNode
+
+
+@dataclass
 class AssignmentNode(ASTNode):
-    """Represents assignment: x = 5"""
-    def __init__(self, target, value):
-        self.target = target
-        self.value = value
+    """Represents assignment, e.g. x = 5."""
 
+    target: VariableNode
+    value: ASTNode
+
+
+@dataclass
 class IfNode(ASTNode):
-    """Represents if statement"""
-    def __init__(self, condition, then_block, else_block=None):
-        self.condition = condition
-        self.then_block = then_block
-        self.else_block = else_block
+    """Represents an if/else statement."""
 
+    condition: ASTNode
+    then_block: List[ASTNode]
+    else_block: Optional[List[ASTNode]] = None
+
+
+@dataclass
 class WhileNode(ASTNode):
-    """Represents while loop"""
-    def __init__(self, condition, body):
-        self.condition = condition
-        self.body = body
+    """Represents a while loop."""
 
+    condition: ASTNode
+    body: List[ASTNode]
+
+
+@dataclass
 class PrintNode(ASTNode):
-    """Represents print statement"""
-    def __init__(self, expression):
-        self.expression = expression
+    """Represents print(expression)."""
 
+    expression: ASTNode
+
+
+@dataclass
 class ProgramNode(ASTNode):
-    """Root node containing all statements"""
-    def __init__(self, statements):
-        self.statements = statements
+    """Root node containing all top-level statements."""
+
+    statements: List[ASTNode]
