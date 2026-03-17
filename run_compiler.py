@@ -24,6 +24,7 @@ import pickle
 
 from src.lexer import Lexer
 from src.parser import Parser
+from src.semantic_analyzer import SemanticAnalyzer
 from src.ast_nodes import (
     ASTNode, AssignmentNode, IfNode, WhileNode, PrintNode,
     BinaryOpNode, UnaryOpNode, VariableNode, NumberNode, StringNode
@@ -36,6 +37,7 @@ from src.ast_nodes import (
 MODELS_DIR  = "ml"
 MODEL_PATH  = os.path.join(MODELS_DIR, "model.pkl")
 LE_PATH     = os.path.join(MODELS_DIR, "label_encoder.pkl")
+CACHE_FILES = ("output.txt", "output.json")
 
 # ──────────────────────────────────────────
 # TOKENIZER — required by the pickled model
@@ -90,6 +92,33 @@ def predict_statement_type(statement_text: str) -> dict:
     }
 
 
+def load_cached_predictions(statement_count: int):
+    """
+    Load pre-classified statements from output.txt/output.json when available.
+    Supports either a raw list of predictions or a dict with a `predictions` key.
+    """
+    for cache_path in CACHE_FILES:
+        if not os.path.exists(cache_path):
+            continue
+
+        try:
+            with open(cache_path, "r", encoding="utf-8") as f:
+                payload = json.load(f)
+        except Exception:
+            continue
+
+        predictions = payload if isinstance(payload, list) else payload.get("predictions")
+        if not isinstance(predictions, list):
+            continue
+        if len(predictions) < statement_count:
+            continue
+
+        print(f"Using cached ML classification from '{cache_path}'.")
+        return predictions, cache_path
+
+    return None, None
+
+
 # ──────────────────────────────────────────
 # AST → STRING
 # ──────────────────────────────────────────
@@ -128,7 +157,7 @@ def ast_node_to_string(node) -> str:
 # ──────────────────────────────────────────
 
 def run_pipeline(source_file: str, output_json_path: str = None):
-    """Executes the lexer, parser, and AI classification pipeline."""
+    """Executes lexer, parser, ML classification, and semantic analysis."""
     print(f"--- Starting Compilation for: {source_file} ---\n")
 
     try:
@@ -165,11 +194,21 @@ def run_pipeline(source_file: str, output_json_path: str = None):
         return
 
     prediction_results = []
+    cached_predictions, cache_path = load_cached_predictions(len(ast.statements))
     BAR = 20
 
     for i, node in enumerate(ast.statements, 1):
         stmt_str = ast_node_to_string(node)
-        result   = predict_statement_type(stmt_str)
+
+        if cached_predictions:
+            cached_row = cached_predictions[i - 1]
+            result = {
+                "class_name": cached_row.get("predicted_type") or cached_row.get("class_name", "Unknown"),
+                "class_id": int(cached_row.get("class_id", -1)),
+                "confidence": float(cached_row.get("confidence", 0.0)),
+            }
+        else:
+            result = predict_statement_type(stmt_str)
 
         filled = int(result["confidence"] * BAR)
         bar    = "█" * filled + "░" * (BAR - filled)
@@ -187,11 +226,29 @@ def run_pipeline(source_file: str, output_json_path: str = None):
             "confidence":     result["confidence"],
         })
 
+    print("4. Running Semantic Analyzer (symbol table + scope checks)...")
+    semantic_analyzer = SemanticAnalyzer()
+    semantic_report = semantic_analyzer.analyze(ast, prediction_results)
+
+    if semantic_report["issues"]:
+        print("   Semantic issues found:")
+        for issue in semantic_report["issues"]:
+            print(f"   - [{issue['level'].upper()}] {issue['message']} ({issue['node_type']})")
+    else:
+        print("   No semantic issues found.")
+
     # --- Save Results ---
-    output_path = "output.json"
+    output_path = output_json_path or "output.json"
+    final_output = {
+        "source_file": source_file,
+        "classification_source": cache_path or "live_model",
+        "predictions": prediction_results,
+        "semantic": semantic_report,
+    }
+
     try:
         with open(output_path, "w") as f:
-            json.dump(prediction_results, f, indent=4)
+            json.dump(final_output, f, indent=4)
         print(f"\n✅ Predictions saved successfully to '{output_path}'")
     except Exception as e:
         print(f"\n❌ Error saving predictions to '{output_path}': {e}")
