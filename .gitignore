@@ -12,3 +12,8 @@ __pycache__/
 
 # Model files
 *.pkl
+
+# Environment secrets
+.env
+.env.*
+!.env.example

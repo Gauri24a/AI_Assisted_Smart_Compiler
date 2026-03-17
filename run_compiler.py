@@ -22,6 +22,11 @@ import re
 import json
 import pickle
 
+try:
+    import google.generativeai as genai
+except Exception:
+    genai = None
+
 from src.lexer import Lexer
 from src.parser import Parser
 from src.semantic_analyzer import SemanticAnalyzer
@@ -38,6 +43,34 @@ MODELS_DIR  = "ml"
 MODEL_PATH  = os.path.join(MODELS_DIR, "model.pkl")
 LE_PATH     = os.path.join(MODELS_DIR, "label_encoder.pkl")
 CACHE_FILES = ("output.txt", "output.json")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+
+
+def load_env_file(env_path: str = ".env"):
+    """Load KEY=VALUE pairs from a local .env file into environment variables."""
+    if not os.path.exists(env_path):
+        return
+
+    try:
+        with open(env_path, "r", encoding="utf-8") as f:
+            for raw_line in f:
+                line = raw_line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+
+                key, value = line.split("=", 1)
+                key = key.strip()
+                value = value.strip().strip('"').strip("'")
+
+                if key and key not in os.environ:
+                    os.environ[key] = value
+    except Exception:
+        # Keep pipeline resilient even if .env has formatting issues
+        pass
+
+
+load_env_file()
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", GEMINI_MODEL)
 
 # ──────────────────────────────────────────
 # TOKENIZER — required by the pickled model
@@ -117,6 +150,90 @@ def load_cached_predictions(statement_count: int):
         return predictions, cache_path
 
     return None, None
+
+
+def _get_gemini_api_keys():
+    """Read Gemini API keys from environment variables.
+
+    Supported:
+      - GEMINI_API_KEYS="key1,key2,key3"
+      - GEMINI_API_KEY="single_key"
+    """
+    keys_csv = os.getenv("GEMINI_API_KEYS", "").strip()
+    single_key = os.getenv("GEMINI_API_KEY", "").strip()
+
+    keys = []
+    if keys_csv:
+        keys.extend([k.strip() for k in keys_csv.split(",") if k.strip()])
+    if single_key:
+        keys.append(single_key)
+
+    # Remove duplicates while preserving order
+    seen = set()
+    unique_keys = []
+    for key in keys:
+        if key not in seen:
+            seen.add(key)
+            unique_keys.append(key)
+    return unique_keys
+
+
+def generate_llm_semantic_feedback(source_code: str, semantic_report: dict):
+    """Generate natural-language explanation and code suggestions using Gemini."""
+    if genai is None:
+        return {
+            "status": "skipped",
+            "reason": "google-generativeai not installed",
+        }
+
+    keys = _get_gemini_api_keys()
+    if not keys:
+        return {
+            "status": "skipped",
+            "reason": "No Gemini API key found. Set GEMINI_API_KEYS or GEMINI_API_KEY.",
+        }
+
+    prompt = (
+        "You are a compiler assistant. Given source code and semantic analysis JSON, "
+        "produce a concise intelligent error explanation and improved corrected code. "
+        "Return strict JSON with keys: summary, error_explanations, suggestions, corrected_code.\n\n"
+        f"SOURCE_CODE:\n{source_code}\n\n"
+        f"SEMANTIC_REPORT_JSON:\n{json.dumps(semantic_report, indent=2)}"
+    )
+
+    last_error = None
+    for idx, key in enumerate(keys, start=1):
+        try:
+            genai.configure(api_key=key)
+            model = genai.GenerativeModel(GEMINI_MODEL)
+            response = model.generate_content(prompt)
+            text = (response.text or "").strip()
+
+            # Try to parse as JSON; fallback to raw text
+            try:
+                parsed = json.loads(text)
+            except Exception:
+                parsed = {
+                    "summary": "LLM response was not strict JSON.",
+                    "error_explanations": [text],
+                    "suggestions": [],
+                    "corrected_code": "",
+                }
+
+            return {
+                "status": "ok",
+                "model": GEMINI_MODEL,
+                "key_index_used": idx,
+                "result": parsed,
+            }
+        except Exception as e:
+            last_error = str(e)
+            continue
+
+    return {
+        "status": "failed",
+        "reason": f"All Gemini keys failed. Last error: {last_error}",
+    }
 
 
 # ──────────────────────────────────────────
@@ -230,10 +347,16 @@ def run_pipeline(source_file: str, output_json_path: str = None):
     semantic_analyzer = SemanticAnalyzer()
     semantic_report = semantic_analyzer.analyze(ast, prediction_results)
 
+    llm_feedback = None
+
     if semantic_report["issues"]:
         print("   Semantic issues found:")
         for issue in semantic_report["issues"]:
             print(f"   - [{issue['level'].upper()}] {issue['message']} ({issue['node_type']})")
+
+        print("5. Requesting Gemini for intelligent explanation + suggestions...")
+        llm_feedback = generate_llm_semantic_feedback(source_code, semantic_report)
+        print(f"   Gemini status: {llm_feedback['status']}")
     else:
         print("   No semantic issues found.")
 
@@ -244,6 +367,7 @@ def run_pipeline(source_file: str, output_json_path: str = None):
         "classification_source": cache_path or "live_model",
         "predictions": prediction_results,
         "semantic": semantic_report,
+        "llm_feedback": llm_feedback,
     }
 
     try:

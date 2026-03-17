@@ -4,3 +4,4 @@ numpy
 gensim
 tensorflow
 scikit-learn
+google-generativeai

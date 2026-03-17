@@ -51,5 +51,6 @@
                 "scope_level": 0
             }
         ]
-    }
+    },
+    "llm_feedback": null
 }
