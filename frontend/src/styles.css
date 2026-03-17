@@ -1,0 +1,147 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Inter, Segoe UI, Arial, sans-serif;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+.page {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+h1 { margin: 0; font-size: 1.4rem; }
+button {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.error {
+  background: #7f1d1d;
+  border: 1px solid #ef4444;
+  padding: 10px;
+  border-radius: 8px;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 12px;
+}
+.layout.two {
+  grid-template-columns: 1fr 1fr;
+}
+.panel {
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 10px;
+  padding: 12px;
+}
+.panel h2 { margin-top: 0; font-size: 1rem; }
+.file-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.file-list button {
+  width: 100%;
+  text-align: left;
+  background: #1f2937;
+}
+.file-list button.active {
+  background: #2563eb;
+}
+pre {
+  background: #0b1220;
+  padding: 10px;
+  border-radius: 8px;
+  overflow: auto;
+  max-height: 280px;
+  margin: 0;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+}
+.phase h3 { margin-top: 0; font-size: 0.95rem; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th, td {
+  border: 1px solid #334155;
+  padding: 8px;
+  text-align: left;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.badge.ok {
+  background: #14532d;
+  color: #bbf7d0;
+  border: 1px solid #166534;
+}
+
+.badge.error,
+.badge.warn {
+  background: #7f1d1d;
+  color: #fecaca;
+  border: 1px solid #ef4444;
+}
+
+.semantic-wrap h3,
+.llm-wrap h3 {
+  margin: 12px 0 8px;
+  font-size: 0.95rem;
+}
+
+.issue-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.node-chip {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #1e293b;
+  color: #93c5fd;
+  font-size: 0.72rem;
+}
+
+.muted {
+  color: #94a3b8;
+}
+
+.llm-fallback p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+@media (max-width: 900px) {
+  .layout,
+  .layout.two { grid-template-columns: 1fr; }
+}

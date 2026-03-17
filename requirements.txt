@@ -5,3 +5,5 @@ gensim
 tensorflow
 scikit-learn
 google-generativeai
+fastapi
+uvicorn

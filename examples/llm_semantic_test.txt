@@ -1,0 +1,20 @@
+// Semantic + LLM trigger sample (valid syntax, semantic issues expected)
+
+x = 5;
+print(x);
+
+// 1) Undefined variable
+print(unknown_var);
+
+// 2) Type mismatch (x was number, now string)
+x = "hello";
+
+// 3) Invalid condition type for if (string used as condition)
+if ("text") {
+    y = 1;
+}
+
+// 4) Invalid arithmetic operands (string + number)
+a = "abc" + 2;
+
+print(a);

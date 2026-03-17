@@ -178,8 +178,16 @@ def _get_gemini_api_keys():
     return unique_keys
 
 
+def _sanitize_error_message(message: str) -> str:
+    """Redact API-key-like strings from errors before persisting to JSON."""
+    if not message:
+        return ""
+    # Gemini / Google API keys usually begin with AIza and are 39 chars total.
+    return re.sub(r"AIza[0-9A-Za-z_-]{35}", "[REDACTED_API_KEY]", message)
+
+
 def generate_llm_semantic_feedback(source_code: str, semantic_report: dict):
-    """Generate natural-language explanation and code suggestions using Gemini."""
+    """Generate concise human-readable explanation and corrected code using Gemini."""
     if genai is None:
         return {
             "status": "skipped",
@@ -194,9 +202,14 @@ def generate_llm_semantic_feedback(source_code: str, semantic_report: dict):
         }
 
     prompt = (
-        "You are a compiler assistant. Given source code and semantic analysis JSON, "
-        "produce a concise intelligent error explanation and improved corrected code. "
-        "Return strict JSON with keys: summary, error_explanations, suggestions, corrected_code.\n\n"
+        "You are a compiler assistant.\n"
+        "Given source code and semantic analyzer output, produce a short, human-friendly response.\n"
+        "Do NOT return JSON.\n"
+        "Keep it concise and practical.\n\n"
+        "Required output format:\n"
+        "1) Error Summary (3-6 lines max, plain English)\n"
+        "2) Suggested Fix (3-8 bullet points, practical)\n"
+        "3) Corrected Code (single corrected code block only)\n\n"
         f"SOURCE_CODE:\n{source_code}\n\n"
         f"SEMANTIC_REPORT_JSON:\n{json.dumps(semantic_report, indent=2)}"
     )
@@ -209,25 +222,20 @@ def generate_llm_semantic_feedback(source_code: str, semantic_report: dict):
             response = model.generate_content(prompt)
             text = (response.text or "").strip()
 
-            # Try to parse as JSON; fallback to raw text
-            try:
-                parsed = json.loads(text)
-            except Exception:
-                parsed = {
-                    "summary": "LLM response was not strict JSON.",
-                    "error_explanations": [text],
-                    "suggestions": [],
-                    "corrected_code": "",
-                }
+            corrected_code = ""
+            code_match = re.search(r"```(?:[a-zA-Z0-9_+-]*)?\n([\s\S]*?)```", text)
+            if code_match:
+                corrected_code = code_match.group(1).strip()
 
             return {
                 "status": "ok",
                 "model": GEMINI_MODEL,
                 "key_index_used": idx,
-                "result": parsed,
+                "result_text": text,
+                "corrected_code": corrected_code,
             }
         except Exception as e:
-            last_error = str(e)
+            last_error = _sanitize_error_message(str(e))
             continue
 
     return {
