@@ -1,0 +1,30 @@
+[
+    {
+        "statement": "x = 5;",
+        "node_type": "AssignmentNode",
+        "predicted_type": "Assignment",
+        "class_id": 0,
+        "confidence": 0.58
+    },
+    {
+        "statement": "y = 10;",
+        "node_type": "AssignmentNode",
+        "predicted_type": "Assignment",
+        "class_id": 0,
+        "confidence": 0.7133
+    },
+    {
+        "statement": "z = x + y;",
+        "node_type": "AssignmentNode",
+        "predicted_type": "Assignment",
+        "class_id": 0,
+        "confidence": 0.76
+    },
+    {
+        "statement": "printf(\"%s\\n\", z);",
+        "node_type": "PrintNode",
+        "predicted_type": "Function Call",
+        "class_id": 4,
+        "confidence": 1.0
+    }
+]

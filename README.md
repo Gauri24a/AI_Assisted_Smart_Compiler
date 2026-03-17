@@ -1,74 +1,43 @@
-# 🧠 AI-Assisted Compiler for Enhanced Semantic Understanding and Error Handling
+# AI-Assisted Smart Compiler
 
-> 🚧 **Project Status:** This project is currently **under active development**.  
-> Compiler phases are being implemented incrementally as part of an academic and research-oriented compiler design project.
+This project is an AI-assisted compiler that uses machine learning to understand programmer intent and provide smarter error messages.
 
----
+## Project Structure
 
-## 📌 Overview
+- `run_compiler.py`: The main entry point to run the compiler.
+- `output.json`: The default output file for predictions.
+- `src/`: Contains the core compiler components (lexer, parser, AST nodes).
+- `tests/`: Contains tests for the compiler components.
+- `ml/`: Contains all machine learning related files.
+  - `scripts/`: Scripts for training the model and making predictions.
+  - `data/`: The datasets used for training.
+- `examples/`: Contains example source code files.
+- `requirements.txt`: The Python dependencies for this project.
+- `README.md`: This file.
 
-Traditional compilers operate using strict grammar and syntax rules. Even small mistakes in source code often lead to unclear and confusing error messages, making programming difficult for beginners and slowing down development.
+## How to Run
 
-This project aims to enhance the traditional compiler pipeline by integrating **Machine Learning (ML)** and **Natural Language Processing (NLP)** techniques—specifically during the **semantic analysis phase**—to better understand programmer intent and generate **clear, human-friendly error messages**, while maintaining compiler correctness and reliability.
+1.  **Install dependencies:**
+    ```sh
+    pip install -r requirements.txt
+    ```
 
-The system follows a **hybrid compiler architecture**, combining:
-- Traditional compiler phases (lexical analysis, parsing, semantic checks)
-- AI-driven semantic understanding using embeddings and ML models
+2.  **Activate the virtual environment:**
+    ```sh
+    d:\AI_Assisted_Smart_Compiler\.venv\Scripts\Activate.ps1
+    ```
 
----
+3.  **Run the compiler:**
+    ```sh
+    python run_compiler.py examples/simple_test.txt
+    ```
 
-## 🎯 Project Objectives
+    This will generate an `output.json` file with the statement predictions.
 
-- Design and implement a custom compiler from scratch
-- Build a lexical analyzer to tokenize source code
-- Develop a syntax analyzer to validate grammar
-- Apply NLP techniques to represent code semantics
-- Train ML models to classify programming constructs
-- Improve semantic error detection and explanations
-- Generate intermediate and target code
+## Current Progress
 
----
-
-## 🏗️ High-Level Architecture
-
-Source Code
-↓
-Lexical Analysis (Tokenization)
-↓
-Syntax Analysis (Parser / AST)
-↓
-NLP Embedding Layer
-↓
-ML-Based Semantic Classification
-↓
-Hybrid Semantic Analysis & Error Handling
-↓
-Intermediate Code Generation
-↓
-Target Code Generation
-
-
----
-## 📌 Current Progress
-
-✅ Lexical Analysis – Completed
-
-✅ Syntax Analysis – Completed
-
-🟡 AI Statement Classification – In Progress
-
-🟡 Semantic Analysis – Planned
-
-🟡 Code Generation – Planned
-
-## 🎓 Academic Significance
-
-This project demonstrates:
-
-Strong understanding of compiler design fundamentals
-
-Application of NLP and ML in systems programming
-
-Hybrid rule-based and AI-driven architecture
-
-Real-world inspired error handling improvements
+- [X] Lexical Analysis
+- [X] Syntax Analysis (Parser and AST)
+- [X] AI Statement Classification
+- [ ] Semantic Analysis (In Progress)
+- [ ] Code Generation (Planned)
