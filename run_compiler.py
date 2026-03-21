@@ -21,6 +21,8 @@ import os
 import re
 import json
 import pickle
+import time
+from pprint import pformat
 
 try:
     import google.generativeai as genai
@@ -125,7 +127,7 @@ def predict_statement_type(statement_text: str) -> dict:
     }
 
 
-def load_cached_predictions(statement_count: int):
+def load_cached_predictions(statement_count: int, source_file: str):
     """
     Load pre-classified statements from output.txt/output.json when available.
     Supports either a raw list of predictions or a dict with a `predictions` key.
@@ -140,7 +142,14 @@ def load_cached_predictions(statement_count: int):
         except Exception:
             continue
 
+        expected_source = str(source_file).replace("\\", "/").lstrip("./")
+        payload_source = ""
         predictions = payload if isinstance(payload, list) else payload.get("predictions")
+        if isinstance(payload, dict):
+            payload_source = str(payload.get("source_file", "")).replace("\\", "/").lstrip("./")
+            if payload_source and payload_source != expected_source:
+                continue
+
         if not isinstance(predictions, list):
             continue
         if len(predictions) < statement_count:
@@ -186,8 +195,8 @@ def _sanitize_error_message(message: str) -> str:
     return re.sub(r"AIza[0-9A-Za-z_-]{35}", "[REDACTED_API_KEY]", message)
 
 
-def generate_llm_semantic_feedback(source_code: str, semantic_report: dict):
-    """Generate concise human-readable explanation and corrected code using Gemini."""
+def generate_llm_semantic_feedback(source_code: str, errors: list):
+    """Generate concise explanation of errors and fixes using Gemini."""
     if genai is None:
         return {
             "status": "skipped",
@@ -203,15 +212,15 @@ def generate_llm_semantic_feedback(source_code: str, semantic_report: dict):
 
     prompt = (
         "You are a compiler assistant.\n"
-        "Given source code and semantic analyzer output, produce a short, human-friendly response.\n"
+        "Given source code and a list of compilation errors from lexical, syntax, and semantic phases, produce a short response.\n"
         "Do NOT return JSON.\n"
         "Keep it concise and practical.\n\n"
         "Required output format:\n"
-        "1) Error Summary (3-6 lines max, plain English)\n"
-        "2) Suggested Fix (3-8 bullet points, practical)\n"
-        "3) Corrected Code (single corrected code block only)\n\n"
+        "1) What the error was (brief summary)\n"
+        "2) How many ways it can be fixed\n"
+        "3) How to fix it (list the ways)\n\n"
         f"SOURCE_CODE:\n{source_code}\n\n"
-        f"SEMANTIC_REPORT_JSON:\n{json.dumps(semantic_report, indent=2)}"
+        f"ERRORS:\n" + "\n".join([f"- {e['phase']}: {e['message']}" for e in errors])
     )
 
     last_error = None
@@ -277,6 +286,17 @@ def ast_node_to_string(node) -> str:
     return node.__class__.__name__
 
 
+def format_tokens(tokens) -> str:
+    rows = []
+    for token in tokens:
+        rows.append(f"{token.type.name:<14} value={token.value!r:<18} at {token.line}:{token.column}")
+    return "\n".join(rows)
+
+
+def format_ast(ast) -> str:
+    return pformat(ast, width=100, compact=False)
+
+
 # ──────────────────────────────────────────
 # MAIN PIPELINE
 # ──────────────────────────────────────────
@@ -284,6 +304,7 @@ def ast_node_to_string(node) -> str:
 def run_pipeline(source_file: str, output_json_path: str = None):
     """Executes lexer, parser, ML classification, and semantic analysis."""
     print(f"--- Starting Compilation for: {source_file} ---\n")
+    pipeline_start = time.perf_counter()
 
     try:
         with open(source_file, "r") as f:
@@ -292,81 +313,113 @@ def run_pipeline(source_file: str, output_json_path: str = None):
         print(f"Fatal Error: Source file not found at '{source_file}'")
         return
 
+    errors = []
+
     # 1. Lexical Analysis
     print("1. Running Lexer...")
+    lex_start = time.perf_counter()
     lexer  = Lexer(source_code)
     tokens = lexer.tokenize()
+    lex_ms = round((time.perf_counter() - lex_start) * 1000, 2)
     if lexer.errors:
         print("Lexical Errors Found:")
         for error in lexer.errors:
             print(f"  - {error}")
-        return
+            errors.append({"phase": "lexical", "message": str(error)})
+    print(f"   Token Count: {len(tokens)}")
+    print("   Tokens:")
+    print(format_tokens(tokens))
 
     # 2. Syntax Analysis
     print("2. Running Parser...")
+    parse_start = time.perf_counter()
+    ast = None
     try:
         parser = Parser(tokens)
         ast    = parser.parse()
+        parse_ms = round((time.perf_counter() - parse_start) * 1000, 2)
     except SyntaxError as e:
         print(f"Syntax Error: {e}")
-        return
-
-    print("3. AST generated. Running AI classification...\n")
-    print("─" * 60)
-
-    if not ast.statements:
-        print("No statements found to classify.")
-        return
+        errors.append({"phase": "syntax", "message": str(e)})
+        parse_ms = round((time.perf_counter() - parse_start) * 1000, 2)
+    if ast:
+        print(f"   AST Statement Count: {len(ast.statements)}")
+        print("   AST:")
+        print(format_ast(ast))
+    else:
+        print("   No AST generated due to errors.")
 
     prediction_results = []
-    cached_predictions, cache_path = load_cached_predictions(len(ast.statements))
-    BAR = 20
+    semantic_report = {"issues": []}
+    cache_path = None
+    if ast and ast.statements:
+        print("3. AST generated. Running AI classification...\n")
+        print("-" * 60)
 
-    for i, node in enumerate(ast.statements, 1):
-        stmt_str = ast_node_to_string(node)
+        cached_predictions, cache_path = load_cached_predictions(len(ast.statements), source_file)
+        class_start = time.perf_counter()
+        BAR = 20
 
-        if cached_predictions:
-            cached_row = cached_predictions[i - 1]
-            result = {
-                "class_name": cached_row.get("predicted_type") or cached_row.get("class_name", "Unknown"),
-                "class_id": int(cached_row.get("class_id", -1)),
-                "confidence": float(cached_row.get("confidence", 0.0)),
-            }
+        for i, node in enumerate(ast.statements, 1):
+            stmt_str = ast_node_to_string(node)
+
+            if cached_predictions:
+                cached_row = cached_predictions[i - 1]
+                result = {
+                    "class_name": cached_row.get("predicted_type") or cached_row.get("class_name", "Unknown"),
+                    "class_id": int(cached_row.get("class_id", -1)),
+                    "confidence": float(cached_row.get("confidence", 0.0)),
+                }
+            else:
+                result = predict_statement_type(stmt_str)
+
+            filled = int(result["confidence"] * BAR)
+            bar    = "#" * filled + "." * (BAR - filled)
+
+            print(f"[{i}] {stmt_str}")
+            print(f"     Type       : {result['class_name']}  (id={result['class_id']})")
+            print(f"     Confidence : [{bar}]  {result['confidence']*100:.1f}%")
+            print()
+
+            prediction_results.append({
+                "statement":      stmt_str,
+                "node_type":      node.__class__.__name__,
+                "predicted_type": result["class_name"],
+                "class_id":       result["class_id"],
+                "confidence":     result["confidence"],
+            })
+
+        classification_ms = round((time.perf_counter() - class_start) * 1000, 2)
+
+        print("4. Running Semantic Analyzer (symbol table + scope checks)...")
+        semantic_start = time.perf_counter()
+        semantic_analyzer = SemanticAnalyzer()
+        semantic_report = semantic_analyzer.analyze(ast, prediction_results)
+        semantic_ms = round((time.perf_counter() - semantic_start) * 1000, 2)
+
+        if semantic_report["issues"]:
+            print("   Semantic issues found:")
+            for issue in semantic_report["issues"]:
+                print(f"   - [{issue['level'].upper()}] {issue['message']} ({issue['node_type']})")
+                errors.append({"phase": "semantic", "level": issue['level'], "message": issue['message'], "node_type": issue['node_type']})
         else:
-            result = predict_statement_type(stmt_str)
-
-        filled = int(result["confidence"] * BAR)
-        bar    = "█" * filled + "░" * (BAR - filled)
-
-        print(f"[{i}] {stmt_str}")
-        print(f"     Type       : {result['class_name']}  (id={result['class_id']})")
-        print(f"     Confidence : [{bar}]  {result['confidence']*100:.1f}%")
-        print()
-
-        prediction_results.append({
-            "statement":      stmt_str,
-            "node_type":      node.__class__.__name__,
-            "predicted_type": result["class_name"],
-            "class_id":       result["class_id"],
-            "confidence":     result["confidence"],
-        })
-
-    print("4. Running Semantic Analyzer (symbol table + scope checks)...")
-    semantic_analyzer = SemanticAnalyzer()
-    semantic_report = semantic_analyzer.analyze(ast, prediction_results)
+            print("   No semantic issues found.")
+    else:
+        classification_ms = 0.0
+        semantic_ms = 0.0
 
     llm_feedback = None
+    llm_ms = 0.0
 
-    if semantic_report["issues"]:
-        print("   Semantic issues found:")
-        for issue in semantic_report["issues"]:
-            print(f"   - [{issue['level'].upper()}] {issue['message']} ({issue['node_type']})")
-
-        print("5. Requesting Gemini for intelligent explanation + suggestions...")
-        llm_feedback = generate_llm_semantic_feedback(source_code, semantic_report)
+    if errors:
+        print("5. Requesting Gemini for error explanation and fixes...")
+        llm_start = time.perf_counter()
+        llm_feedback = generate_llm_semantic_feedback(source_code, errors)
+        llm_ms = round((time.perf_counter() - llm_start) * 1000, 2)
         print(f"   Gemini status: {llm_feedback['status']}")
-    else:
-        print("   No semantic issues found.")
+
+    total_ms = round((time.perf_counter() - pipeline_start) * 1000, 2)
+    to_semantic_ms = round(lex_ms + parse_ms + classification_ms + semantic_ms, 2)
 
     # --- Save Results ---
     output_path = output_json_path or "output.json"
@@ -375,18 +428,28 @@ def run_pipeline(source_file: str, output_json_path: str = None):
         "classification_source": cache_path or "live_model",
         "predictions": prediction_results,
         "semantic": semantic_report,
+        "errors": errors,
         "llm_feedback": llm_feedback,
+        "timings": {
+            "lexer_ms": lex_ms,
+            "parser_ms": parse_ms,
+            "classification_ms": classification_ms,
+            "semantic_ms": semantic_ms,
+            "llm_ms": llm_ms,
+            "to_semantic_ms": to_semantic_ms,
+            "total_ms": total_ms,
+        },
     }
 
     try:
         with open(output_path, "w") as f:
             json.dump(final_output, f, indent=4)
-        print(f"\n✅ Predictions saved successfully to '{output_path}'")
+        print(f"\n[OK] Predictions saved successfully to '{output_path}'")
     except Exception as e:
-        print(f"\n❌ Error saving predictions to '{output_path}': {e}")
+        print(f"\n[ERROR] Error saving predictions to '{output_path}': {e}")
 
-    print("─" * 60)
-    print(f"Predictions saved  →  {output_path}")
+    print("-" * 60)
+    print(f"Predictions saved to {output_path}")
     print("--- Compilation Pipeline Finished ---\n")
 
 

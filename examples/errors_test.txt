@@ -1,5 +1,4 @@
-// Test with intentional errors
 x = 5;
-y = @invalid;  // Invalid character
+y = @invalid;
 z = "unterminated string
 a = 10;

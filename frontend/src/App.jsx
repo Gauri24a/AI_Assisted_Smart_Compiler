@@ -1,9 +1,84 @@
 import React from 'react'
 import { useEffect, useMemo, useState } from 'react'
 
-const API_BASE = 'http://127.0.0.1:8000'
+const API_BASE_CANDIDATES = ['http://127.0.0.1:8001', 'http://localhost:8001', '']
+
+async function requestJson(path, options) {
+  let lastError = null
+
+  for (const base of API_BASE_CANDIDATES) {
+    try {
+      const res = await fetch(`${base}${path}`, options)
+      if (!res.ok) {
+        const text = await res.text()
+        throw new Error(`${res.status} ${res.statusText} - ${text}`)
+      }
+      return await res.json()
+    } catch (err) {
+      lastError = err
+    }
+  }
+
+  throw lastError || new Error('API request failed')
+}
+
+const PHASE_LOGIC = {
+  lexer: 'Tokenizes source code into keywords, identifiers, literals, operators, and delimiters.',
+  parser: 'Builds AST using grammar rules and validates syntax structure.',
+  classification: 'Converts AST statements to text and predicts statement class using TF-IDF + RandomForest.',
+  semantic: 'Checks types, scope rules, symbol table consistency, and undefined variables.',
+  llm: 'If semantic issues exist, asks Gemini for concise explanation and corrected code suggestion.',
+}
+
+const PHASE_EXAMPLES = [
+  {
+    title: '1) Lexical Analysis',
+    purpose: 'Break source code into tokens (keywords, identifiers, operators, literals).',
+    input: 'x = 5;\nif (x > 3) { print(x); }',
+    output: 'IDENTIFIER(x), ASSIGN(=), NUMBER(5), SEMICOLON(;)\nIF, LPAREN, IDENTIFIER(x), GREATER, NUMBER(3), RPAREN, LBRACE, PRINT, LPAREN, IDENTIFIER(x), RPAREN, SEMICOLON, RBRACE',
+  },
+  {
+    title: '2) Syntax Analysis (Parser)',
+    purpose: 'Validate grammar and build AST structure.',
+    input: 'x = 5;\nprint(x);',
+    output: 'ProgramNode\n  AssignmentNode(target=x, value=5)\n  PrintNode(expression=x)',
+  },
+  {
+    title: '3) ML Classification',
+    purpose: 'Classify each statement intent using TF-IDF + RandomForest.',
+    input: 'if (x > 10) { }',
+    output: 'Predicted Type: Conditional\nConfidence: 83% (example)',
+  },
+  {
+    title: '4) Semantic Analysis',
+    purpose: 'Validate meaning: types, scope, symbol table, undefined variables.',
+    input: 'x = 5;\nx = "hello";\nprint(y);',
+    output: 'ERROR: Type mismatch for x (number vs string)\nERROR: Use of undefined variable y',
+  },
+  {
+    title: '5) LLM Layer',
+    purpose: 'When semantic errors exist, generate concise explanation + corrected code suggestion.',
+    input: 'semantic status = error + issue list',
+    output: 'Short human-readable explanation\nFix suggestions\nCorrected code block',
+  },
+]
+
+const ML_METRICS = {
+  datasetSize: '15,000 samples',
+  classes: 15,
+  split: 'Train: 12,000 | Test: 3,000',
+  cv: '0.9578 ± 0.0027 (5-fold stratified)',
+  testAcc: '0.9607 (96.07%)',
+  notable: [
+    'Loop: precision 1.00, recall 1.00',
+    'Return: precision 1.00, recall 0.99',
+    'Memory Allocation: precision 0.98, recall 0.98',
+    'Increment/Decrement: precision 0.86, recall 0.86',
+  ],
+}
 
 export default function App() {
+  const [page, setPage] = useState('pipeline')
   const [files, setFiles] = useState([])
   const [selectedPath, setSelectedPath] = useState('')
   const [isRunning, setIsRunning] = useState(false)
@@ -11,8 +86,7 @@ export default function App() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/files`)
-      .then((res) => res.json())
+    requestJson('/api/files')
       .then((data) => {
         const loaded = data.files || []
         setFiles(loaded)
@@ -31,13 +105,11 @@ export default function App() {
     setIsRunning(true)
     setError('')
     try {
-      const res = await fetch(`${API_BASE}/api/run`, {
+      const data = await requestJson('/api/run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ file_path: selectedPath }),
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.detail || 'Run failed')
       setResult(data)
     } catch (e) {
       setError(String(e))
@@ -49,103 +121,255 @@ export default function App() {
   const predictions = result?.compiler_output?.predictions || []
   const semantic = result?.compiler_output?.semantic || null
   const llm = result?.compiler_output?.llm_feedback || null
+  const latency = result?.latency_comparison || null
 
   return (
     <div className="page">
       <header>
-        <h1>AI Assisted Smart Compiler</h1>
-        <button disabled={!selectedPath || isRunning} onClick={runCompiler}>
-          {isRunning ? 'Running...' : 'Run Pipeline'}
-        </button>
+        <div>
+          <h1>AI Assisted Smart Compiler</h1>
+          <p className="muted">Interactive compiler pipeline + explainable ML/semantic flow</p>
+        </div>
+        <div className="top-nav">
+          <button className={page === 'pipeline' ? 'nav-btn active' : 'nav-btn'} onClick={() => setPage('pipeline')}>
+            Pipeline Page
+          </button>
+          <button className={page === 'learn' ? 'nav-btn active' : 'nav-btn'} onClick={() => setPage('learn')}>
+            Phase Guide Page
+          </button>
+        </div>
       </header>
 
       {error && <div className="error">{error}</div>}
 
-      <section className="layout">
-        <aside className="panel">
-          <h2>Source Files</h2>
-          <ul className="file-list">
-            {files.map((file) => (
-              <li key={file.path}>
-                <button
-                  className={file.path === selectedPath ? 'active' : ''}
-                  onClick={() => setSelectedPath(file.path)}
-                >
-                  {file.path}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </aside>
+      {page === 'pipeline' ? (
+        <>
+          <section className="panel run-toolbar">
+            <div>
+              <h2>Run Compiler Pipeline</h2>
+              <p className="muted">Select file on the left, then run. Outputs for each phase are shown below.</p>
+            </div>
+            <button disabled={!selectedPath || isRunning} onClick={runCompiler}>
+              {isRunning ? 'Running...' : 'Run Pipeline'}
+            </button>
+          </section>
 
-        <main className="panel">
-          <h2>Code Preview</h2>
-          <pre>{selectedFile?.content || 'Select a file...'}</pre>
-        </main>
-      </section>
+          <section className="layout">
+            <aside className="panel">
+              <h2>Source Files</h2>
+              <ul className="file-list">
+                {files.map((file) => (
+                  <li key={file.path}>
+                    <button
+                      className={file.path === selectedPath ? 'active' : ''}
+                      onClick={() => setSelectedPath(file.path)}
+                    >
+                      {file.path}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </aside>
 
-      <section className="panel">
-        <h2>Phase Outputs</h2>
-        <div className="grid">
-          <Phase title="Lexical Analysis" body={result?.phase_logs?.lexer} />
-          <Phase title="Syntax Analysis" body={result?.phase_logs?.parser} />
-          <Phase title="ML Classification" body={result?.phase_logs?.classification} />
-          <Phase title="Semantic Analysis" body={result?.phase_logs?.semantic} />
-          <Phase title="LLM Layer" body={result?.phase_logs?.llm || 'Not triggered'} />
-        </div>
-      </section>
+            <main className="panel">
+              <h2>Code Preview</h2>
+              <pre className="tall">{selectedFile?.content || 'Select a file...'}</pre>
+            </main>
+          </section>
 
-      <section className="panel">
-        <h2>Predictions</h2>
-        {predictions.length === 0 ? (
-          <p>No predictions yet.</p>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Statement</th>
-                <th>Predicted Type</th>
-                <th>Confidence</th>
-              </tr>
-            </thead>
-            <tbody>
-              {predictions.map((p, i) => (
-                <tr key={i}>
-                  <td>{p.statement}</td>
-                  <td>{p.predicted_type}</td>
-                  <td>{Math.round((p.confidence || 0) * 100)}%</td>
-                </tr>
+          <section className="panel">
+            <h2>Phase Outputs</h2>
+            <div className="phase-stack">
+              <Phase title="Lexical Analysis" logic={PHASE_LOGIC.lexer} body={result?.phase_logs?.lexer} />
+              <Phase title="Syntax Analysis" logic={PHASE_LOGIC.parser} body={result?.phase_logs?.parser} />
+              <Phase title="ML Classification" logic={PHASE_LOGIC.classification} body={result?.phase_logs?.classification} />
+              <Phase title="Semantic Analysis" logic={PHASE_LOGIC.semantic} body={result?.phase_logs?.semantic} />
+              <Phase title="LLM Layer" logic={PHASE_LOGIC.llm} body={result?.phase_logs?.llm || 'Not triggered'} />
+            </div>
+          </section>
+
+          <section className="panel">
+            <h2>Compile Latency Comparison (to Semantic Analyzer)</h2>
+            <LatencyView latency={latency} />
+          </section>
+
+          <section className="panel">
+            <h2>Predictions</h2>
+            {predictions.length === 0 ? (
+              <p>No predictions yet.</p>
+            ) : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Statement</th>
+                    <th>Predicted Type</th>
+                    <th>Confidence</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {predictions.map((p, i) => (
+                    <tr key={i}>
+                      <td>{p.statement}</td>
+                      <td>{p.predicted_type}</td>
+                      <td>{Math.round((p.confidence || 0) * 100)}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </section>
+
+          <section className="layout two">
+            <div className="panel">
+              <h2>Semantic Analysis</h2>
+              <SemanticView semantic={semantic} />
+            </div>
+            <div className="panel">
+              <h2>LLM Feedback</h2>
+              <LLMView llm={llm} />
+            </div>
+          </section>
+
+          <section className="panel">
+            <h2>Raw Compiler Logs</h2>
+            <pre className="tall">{result?.stdout || 'No run yet.'}</pre>
+          </section>
+        </>
+      ) : (
+        <>
+          <section className="layout two">
+            <div className="panel">
+              <h2>Know More (ML + Dataset)</h2>
+              <KnowMoreView />
+            </div>
+            <div className="panel">
+              <h2>FAQ</h2>
+              <FAQView />
+            </div>
+          </section>
+
+          <section className="panel">
+            <h2>How Each Phase Works (with examples)</h2>
+            <div className="learn-grid">
+              {PHASE_EXAMPLES.map((item, idx) => (
+                <article key={idx} className="learn-card">
+                  <h3>{item.title}</h3>
+                  <p className="muted">{item.purpose}</p>
+                  <h4>Input Example</h4>
+                  <pre>{item.input}</pre>
+                  <h4>Output Example</h4>
+                  <pre>{item.output}</pre>
+                </article>
               ))}
-            </tbody>
-          </table>
-        )}
-      </section>
-
-      <section className="layout two">
-        <div className="panel">
-          <h2>Semantic Analysis</h2>
-          <SemanticView semantic={semantic} />
-        </div>
-        <div className="panel">
-          <h2>LLM Feedback</h2>
-          <LLMView llm={llm} />
-        </div>
-      </section>
-
-      <section className="panel">
-        <h2>Raw Compiler Logs</h2>
-        <pre>{result?.stdout || 'No run yet.'}</pre>
-      </section>
+            </div>
+          </section>
+        </>
+      )}
     </div>
   )
 }
 
-function Phase({ title, body }) {
+function Phase({ title, logic, body }) {
   return (
-    <article className="phase">
+    <article className="phase phase-output">
       <h3>{title}</h3>
-      <pre>{body || 'No output yet.'}</pre>
+      <p className="muted phase-logic">{logic}</p>
+      <pre className="phase-pre">{body || 'No output yet.'}</pre>
     </article>
+  )
+}
+
+function LatencyView({ latency }) {
+  if (!latency) return <p>No timing data yet. Run the pipeline first.</p>
+  if (latency.status !== 'ok') {
+    return <p className="muted">Timing comparison unavailable: {latency.reason || latency.status}</p>
+  }
+
+  return (
+    <div>
+      <p className="muted">
+        ML timing depends on classification source: live model inference is slower than warm-cache reuse.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Pipeline</th>
+            <th>Time to Semantic (ms)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>ML-Assisted</td>
+            <td>{latency.ml?.to_semantic_ms}</td>
+          </tr>
+          <tr>
+            <td>Traditional</td>
+            <td>{latency.traditional?.to_semantic_ms}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        <strong>Faster:</strong> {latency.faster} | <strong>Difference:</strong> {latency.difference_ms} ms |
+        <strong> Speedup:</strong> {latency.speedup_percent_vs_traditional}%
+      </p>
+      <p>
+        <strong>ML Classification Source:</strong> {latency.ml?.classification_source || 'unknown'}
+      </p>
+    </div>
+  )
+}
+
+function KnowMoreView() {
+  return (
+    <div>
+      <ul className="issue-list">
+        <li><strong>Dataset:</strong> {ML_METRICS.datasetSize}</li>
+        <li><strong>Classes:</strong> {ML_METRICS.classes}</li>
+        <li><strong>Split:</strong> {ML_METRICS.split}</li>
+        <li><strong>Cross Validation:</strong> {ML_METRICS.cv}</li>
+        <li><strong>Test Accuracy:</strong> {ML_METRICS.testAcc}</li>
+      </ul>
+
+      <h3>Classification Report Highlights</h3>
+      <ul className="issue-list">
+        {ML_METRICS.notable.map((item, idx) => (
+          <li key={idx}>{item}</li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+function FAQView() {
+  return (
+    <div>
+      <details open>
+        <summary>What model is used for statement classification?</summary>
+        <p>TF-IDF vectorizer + RandomForest classifier, trained on 15 statement categories.</p>
+      </details>
+      <details>
+        <summary>How accurate is the ML model?</summary>
+        <p>Test accuracy is 96.07%, and 5-fold CV is 0.9578 ± 0.0027.</p>
+      </details>
+      <details>
+        <summary>Why does LLM run only sometimes?</summary>
+        <p>LLM is triggered only when semantic issues are found. If semantic status is OK, LLM is skipped.</p>
+      </details>
+      <details>
+        <summary>Why do some examples show no semantic errors?</summary>
+        <p>Some examples are syntactically and semantically valid, so analyzer reports no issues.</p>
+      </details>
+      <details>
+        <summary>What does each phase do?</summary>
+        <ul className="issue-list">
+          <li><strong>Lexer:</strong> {PHASE_LOGIC.lexer}</li>
+          <li><strong>Parser:</strong> {PHASE_LOGIC.parser}</li>
+          <li><strong>ML:</strong> {PHASE_LOGIC.classification}</li>
+          <li><strong>Semantic:</strong> {PHASE_LOGIC.semantic}</li>
+          <li><strong>LLM:</strong> {PHASE_LOGIC.llm}</li>
+        </ul>
+      </details>
+    </div>
   )
 }
 

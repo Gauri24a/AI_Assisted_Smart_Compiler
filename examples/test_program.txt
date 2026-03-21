@@ -1,4 +1,3 @@
-// Test Program for Compiler
 x = 5;
 y = x + 3;
 z = y * 2;

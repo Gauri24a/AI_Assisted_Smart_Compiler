@@ -2,21 +2,35 @@
 body {
   margin: 0;
   font-family: Inter, Segoe UI, Arial, sans-serif;
+  font-size: 16px;
   background: #0f172a;
   color: #e2e8f0;
 }
 .page {
-  padding: 20px;
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
 }
 h1 { margin: 0; font-size: 1.4rem; }
+.top-nav {
+  display: flex;
+  gap: 10px;
+}
+.nav-btn {
+  background: #1f2937;
+}
+.nav-btn.active {
+  background: #2563eb;
+}
 button {
   background: #3b82f6;
   color: white;
@@ -34,8 +48,8 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 .layout {
   display: grid;
-  grid-template-columns: 300px 1fr;
-  gap: 12px;
+  grid-template-columns: 360px 1fr;
+  gap: 16px;
 }
 .layout.two {
   grid-template-columns: 1fr 1fr;
@@ -44,7 +58,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   background: #111827;
   border: 1px solid #1f2937;
   border-radius: 10px;
-  padding: 12px;
+  padding: 16px;
 }
 .panel h2 { margin-top: 0; font-size: 1rem; }
 .file-list {
@@ -68,15 +82,48 @@ pre {
   padding: 10px;
   border-radius: 8px;
   overflow: auto;
-  max-height: 280px;
+  max-height: 420px;
+  font-size: 15px;
+  line-height: 1.45;
   margin: 0;
+}
+.tall {
+  max-height: 560px;
 }
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 12px;
+}
+
+.phase-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.phase-output {
+  background: #0b1220;
+  border: 1px solid #1f2937;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.phase-pre {
+  max-height: 360px;
+}
+
+.run-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
 }
 .phase h3 { margin-top: 0; font-size: 0.95rem; }
+.phase-logic {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+}
 table {
   width: 100%;
   border-collapse: collapse;
@@ -140,6 +187,45 @@ th, td {
 .llm-fallback p {
   margin: 0;
   white-space: pre-wrap;
+}
+
+.learn-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 14px;
+}
+
+.learn-card {
+  background: #0b1220;
+  border: 1px solid #1f2937;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.learn-card h3 {
+  margin: 0 0 8px;
+}
+
+.learn-card h4 {
+  margin: 10px 0 6px;
+  font-size: 0.9rem;
+}
+
+details {
+  background: #0b1220;
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
+
+details summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+details p {
+  margin: 8px 0 0;
 }
 @media (max-width: 900px) {
   .layout,
