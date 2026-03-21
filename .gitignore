@@ -2,22 +2,42 @@
 venv/
 env/
 ENV/
+.venv/
 
 # Python Cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
 # VS Code
 .vscode/
+*.code-workspace
 
 # Frontend artifacts
 frontend/node_modules/
 frontend/dist/
+frontend/.vite/
 
-# Model files
+# Model files and outputs
 *.pkl
+output.json
+output.txt
 
 # Environment secrets
 .env
 .env.*
 !.env.example
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# IDE
+.idea/
+*.swp
+*.swo
