@@ -379,16 +379,91 @@ function LatencyView({ latency }) {
   )
 }
 
+function MLModelCard() {
+  const architectureSteps = useMemo(
+    () => [
+      {
+        title: '1. Tokenizer',
+        description:
+          "Custom character-aware function (c_tokenizer) that splits code into syntax-aware tokens (->, *, &, identifiers, etc.).",
+      },
+      {
+        title: '2. Vectorizer (TF-IDF)',
+        description:
+          'Converts tokens into a 5000-feature numerical vector, using unigrams, bigrams, and trigrams to capture structure.',
+      },
+      {
+        title: '3. Classifier (Random Forest)',
+        description:
+          'A Random Forest with 300 estimators makes the final prediction. It is trained on a balanced dataset to handle class variety.',
+      },
+    ],
+    []
+  )
+
+  const metrics = useMemo(
+    () => [
+      { label: 'Dataset', value: ML_METRICS.datasetSize },
+      { label: 'Test Accuracy', value: ML_METRICS.testAcc, strong: true },
+      { label: 'Cross-Validation', value: '0.9578 (5-fold stratified)' },
+    ],
+    []
+  )
+
+  return (
+    <article className="ml-model-card" aria-label="ML Statement Classification Model">
+      <header className="ml-model-card-header">
+        <p className="ml-model-kicker">Model Overview</p>
+        <h3>ML Statement Classification Model</h3>
+      </header>
+
+      <section className="ml-model-section">
+        <h4>Overview</h4>
+        <div className="ml-kv-grid">
+          <div className="ml-kv-item">
+            <span className="ml-kv-label">Model Pipeline</span>
+            <span className="ml-kv-value mono">TfidfVectorizer + RandomForestClassifier</span>
+          </div>
+          <div className="ml-kv-item">
+            <span className="ml-kv-label">Purpose</span>
+            <span className="ml-kv-value">
+              To classify C/C++ code statements into one of 15 categories (e.g., Loop, Assignment, Conditional).
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <section className="ml-model-section">
+        <h4>How It Works</h4>
+        <div className="ml-steps">
+          {architectureSteps.map((step) => (
+            <article className="ml-step" key={step.title}>
+              <h5>{step.title}</h5>
+              <p>{step.description}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="ml-model-section">
+        <h4>Performance</h4>
+        <ul className="ml-metrics">
+          {metrics.map((m) => (
+            <li key={m.label} className="ml-metric-row">
+              <span className="ml-metric-label">{m.label}</span>
+              <span className={m.strong ? 'ml-metric-value strong' : 'ml-metric-value'}>{m.value}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </article>
+  )
+}
+
 function KnowMoreView() {
   return (
-    <div>
-      <ul className="issue-list">
-        <li><strong>Dataset:</strong> {ML_METRICS.datasetSize}</li>
-        <li><strong>Classes:</strong> {ML_METRICS.classes}</li>
-        <li><strong>Split:</strong> {ML_METRICS.split}</li>
-        <li><strong>Cross Validation:</strong> {ML_METRICS.cv}</li>
-        <li><strong>Test Accuracy:</strong> {ML_METRICS.testAcc}</li>
-      </ul>
+    <div className="know-more-wrap">
+      <MLModelCard />
 
       <h3>Classification Report Highlights</h3>
       <ul className="issue-list">
@@ -397,41 +472,67 @@ function KnowMoreView() {
         ))}
       </ul>
 
-      <h3>ML Training Log (training_log.txt)</h3>
-      <pre className="tall">{ML_TRAINING_LOG}</pre>
+      <details>
+        <summary>ML Training Log (training_log.txt)</summary>
+        <pre className="tall">{ML_TRAINING_LOG}</pre>
+      </details>
     </div>
   )
 }
 
 function FAQView() {
+  const faqItems = [
+    {
+      question: 'What model is used for statement classification?',
+      answer: 'TF-IDF vectorizer + RandomForest classifier, trained on 15 statement categories.',
+    },
+    {
+      question: 'How accurate is the ML model?',
+      answer: 'Test accuracy is 96.07%, and 5-fold CV is 0.9578 ± 0.0027.',
+    },
+    {
+      question: 'Why does the LLM run only sometimes?',
+      answer:
+        'The LLM is triggered only when semantic issues are found. If the semantic status is OK, the LLM is skipped.',
+    },
+    {
+      question: 'Why do some examples show no semantic errors?',
+      answer: 'Some examples are syntactically and semantically valid, so the analyzer reports no issues.',
+    },
+    {
+      question: 'What does each phase do?',
+      points: [
+        'Lexer tokenizes code.',
+        'Parser builds the AST.',
+        'ML classifies statements.',
+        'Semantic analyzer checks scope/type rules.',
+        'LLM provides feedback on errors.',
+      ],
+    },
+  ]
+
   return (
-    <div>
-      <details open>
-        <summary>What model is used for statement classification?</summary>
-        <p>TF-IDF vectorizer + RandomForest classifier, trained on 15 statement categories.</p>
-      </details>
-      <details>
-        <summary>How accurate is the ML model?</summary>
-        <p>Test accuracy is 96.07%, and 5-fold CV is 0.9578 ± 0.0027.</p>
-      </details>
-      <details>
-        <summary>Why does LLM run only sometimes?</summary>
-        <p>LLM is triggered only when semantic issues are found. If semantic status is OK, LLM is skipped.</p>
-      </details>
-      <details>
-        <summary>Why do some examples show no semantic errors?</summary>
-        <p>Some examples are syntactically and semantically valid, so analyzer reports no issues.</p>
-      </details>
-      <details>
-        <summary>What does each phase do?</summary>
-        <ul className="issue-list">
-          <li><strong>Lexer:</strong> {PHASE_LOGIC.lexer}</li>
-          <li><strong>Parser:</strong> {PHASE_LOGIC.parser}</li>
-          <li><strong>ML:</strong> {PHASE_LOGIC.classification}</li>
-          <li><strong>Semantic:</strong> {PHASE_LOGIC.semantic}</li>
-          <li><strong>LLM:</strong> {PHASE_LOGIC.llm}</li>
-        </ul>
-      </details>
+    <div className="faq-wrap">
+      <h3>Frequently Asked Questions</h3>
+      <div className="faq-grid">
+        {faqItems.map((item, idx) => (
+          <article className="faq-card" key={item.question}>
+            <div className="faq-card-header">
+              <span className="faq-index">{idx + 1}</span>
+              <h4>{item.question}</h4>
+            </div>
+            {item.points ? (
+              <ul>
+                {item.points.map((point) => (
+                  <li key={point}>{point}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>{item.answer}</p>
+            )}
+          </article>
+        ))}
+      </div>
     </div>
   )
 }
