@@ -212,13 +212,22 @@ def generate_llm_semantic_feedback(source_code: str, errors: list):
 
     prompt = (
         "You are a compiler assistant.\n"
-        "Given source code and a list of compilation errors from lexical, syntax, and semantic phases, produce a short response.\n"
+        "Given source code and compiler errors, produce a concise, practical fix guide.\n"
         "Do NOT return JSON.\n"
-        "Keep it concise and practical.\n\n"
-        "Required output format:\n"
-        "1) What the error was (brief summary)\n"
-        "2) How many ways it can be fixed\n"
-        "3) How to fix it (list the ways)\n\n"
+        "Keep it short and easy to read.\n\n"
+        "Required output format (for EACH error):\n"
+        "1) Error Summary: <brief summary>\n"
+        "2) Why It Happens: <one short line>\n"
+        "3) Fix Options: <N ways>\n"
+        "4) Suggested New Statement (best single fix):\n"
+        "```c\n"
+        "<one corrected statement line>\n"
+        "```\n"
+        "5) Alternative Statements (optional):\n"
+        "- `...`\n"
+        "- `...`\n\n"
+        "Important: The 'Suggested New Statement' code block is mandatory for each error.\n"
+        "If there are multiple errors, include one code block per error.\n\n"
         f"SOURCE_CODE:\n{source_code}\n\n"
         f"ERRORS:\n" + "\n".join([f"- {e['phase']}: {e['message']}" for e in errors])
     )
@@ -232,9 +241,18 @@ def generate_llm_semantic_feedback(source_code: str, errors: list):
             text = (response.text or "").strip()
 
             corrected_code = ""
-            code_match = re.search(r"```(?:[a-zA-Z0-9_+-]*)?\n([\s\S]*?)```", text)
-            if code_match:
-                corrected_code = code_match.group(1).strip()
+            statement_suggestions = []
+
+            code_blocks = re.findall(r"```(?:[a-zA-Z0-9_+-]*)?\n([\s\S]*?)```", text)
+            if code_blocks:
+                cleaned_blocks = [block.strip() for block in code_blocks if block.strip()]
+                if cleaned_blocks:
+                    corrected_code = "\n\n".join(cleaned_blocks)
+                    statement_suggestions = cleaned_blocks
+
+            if not statement_suggestions:
+                inline_examples = re.findall(r"`([^`\n;]+;?)`", text)
+                statement_suggestions = [item.strip() for item in inline_examples if item.strip()]
 
             return {
                 "status": "ok",
@@ -242,6 +260,7 @@ def generate_llm_semantic_feedback(source_code: str, errors: list):
                 "key_index_used": idx,
                 "result_text": text,
                 "corrected_code": corrected_code,
+                "statement_suggestions": statement_suggestions,
             }
         except Exception as e:
             last_error = _sanitize_error_message(str(e))

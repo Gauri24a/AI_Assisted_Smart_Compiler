@@ -20,16 +20,24 @@
         }
     ],
     "llm_feedback": {
-        "status": "failed",
-        "reason": "All Gemini keys failed. Last error: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-3.1-pro\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-3.1-pro\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-3.1-pro\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-3.1-pro\nPlease retry in 38.956747156s. [links {\n  description: \"Learn more about Gemini API quotas\"\n  url: \"https://ai.google.dev/gemini-api/docs/rate-limits\"\n}\n, violations {\n  quota_metric: \"generativelanguage.googleapis.com/generate_content_free_tier_input_token_count\"\n  quota_id: \"GenerateContentInputTokensPerModelPerDay-FreeTier\"\n  quota_dimensions {\n    key: \"model\"\n    value: \"gemini-3.1-pro\"\n  }\n  quota_dimensions {\n    key: \"location\"\n    value: \"global\"\n  }\n}\nviolations {\n  quota_metric: \"generativelanguage.googleapis.com/generate_content_free_tier_requests\"\n  quota_id: \"GenerateRequestsPerDayPerProjectPerModel-FreeTier\"\n  quota_dimensions {\n    key: \"model\"\n    value: \"gemini-3.1-pro\"\n  }\n  quota_dimensions {\n    key: \"location\"\n    value: \"global\"\n  }\n}\nviolations {\n  quota_metric: \"generativelanguage.googleapis.com/generate_content_free_tier_requests\"\n  quota_id: \"GenerateRequestsPerMinutePerProjectPerModel-FreeTier\"\n  quota_dimensions {\n    key: \"model\"\n    value: \"gemini-3.1-pro\"\n  }\n  quota_dimensions {\n    key: \"location\"\n    value: \"global\"\n  }\n}\nviolations {\n  quota_metric: \"generativelanguage.googleapis.com/generate_content_free_tier_input_token_count\"\n  quota_id: \"GenerateContentInputTokensPerModelPerMinute-FreeTier\"\n  quota_dimensions {\n    key: \"model\"\n    value: \"gemini-3.1-pro\"\n  }\n  quota_dimensions {\n    key: \"location\"\n    value: \"global\"\n  }\n}\n, retry_delay {\n  seconds: 38\n}\n]"
+        "status": "ok",
+        "model": "gemini-2.5-flash",
+        "key_index_used": 1,
+        "result_text": "Here's a concise fix guide for your compiler errors:\n\n1) Error Summary: Unknown character '@'\n2) Why It Happens: The '@' symbol is not a valid character for starting an identifier or literal in this context.\n3) Fix Options:\n    1. Remove the invalid character if it's a typo.\n    2. Replace it with a valid identifier character or enclose in quotes if it's meant to be a string.\nSuggested New Statement:\n```c\ny = invalid;\n```\nAlternative Statements:\n- `y = \"invalid\";`\n- `y = 0;`\n\n---\n\n1) Error Summary: Unterminated string literal\n2) Why It Happens: A string literal started with '\\\"' but was not closed before the end of the line.\n3) Fix Options:\n    1. Add a closing '\\\"' to terminate the string.\n    2. Remove the opening '\\\"' if it was not meant to be a string literal.\nSuggested New Statement:\n```c\nz = \"unterminated string\";\n```\n\n---\n\n1) Error Summary: Missing statement terminator\n2) Why It Happens: An assignment statement was expected to be terminated by a semicolon ';'.\n3) Fix Options:\n    1. Add a semicolon at the end of the statement.\nSuggested New Statement:\n```c\na = 10;\n```",
+        "corrected_code": "y = invalid;\n\nz = \"unterminated string\";\n\na = 10;",
+        "statement_suggestions": [
+            "y = invalid;",
+            "z = \"unterminated string\";",
+            "a = 10;"
+        ]
     },
     "timings": {
-        "lexer_ms": 0.53,
-        "parser_ms": 0.32,
+        "lexer_ms": 0.44,
+        "parser_ms": 0.13,
         "classification_ms": 0.0,
         "semantic_ms": 0.0,
-        "llm_ms": 724.17,
-        "to_semantic_ms": 0.85,
-        "total_ms": 728.68
+        "llm_ms": 16439.1,
+        "to_semantic_ms": 0.57,
+        "total_ms": 16440.42
     }
 }

@@ -36,9 +36,9 @@ from sklearn.model_selection import StratifiedKFold, cross_val_score, train_test
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # CONFIG
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 DATASET_PATH = os.path.join("..", "data", "dataset.csv")
 MODEL_PATH   = "model.pkl"
@@ -68,9 +68,9 @@ TFIDF_PARAMS = dict(
     min_df=2,
 )
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # TOKENIZER — character-aware for C/C++
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 def c_tokenizer(text: str):
     """
@@ -84,9 +84,9 @@ def c_tokenizer(text: str):
     return re.findall(r"[A-Za-z_][A-Za-z0-9_]*|\d+|[^\w\s]", text)
 
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # LOAD DATA
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 script_dir   = os.path.dirname(os.path.abspath(__file__))
 dataset_path = os.path.join(script_dir, DATASET_PATH)
@@ -108,18 +108,18 @@ le.fit(df["class_name"].unique())
 class_names = [df.loc[df["class_id"] == i, "class_name"].iloc[0]
                for i in sorted(df["class_id"].unique())]
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # TRAIN / TEST SPLIT
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=TEST_SIZE, stratify=y, random_state=RANDOM_STATE
 )
 print(f"Train : {len(X_train):,}  |  Test : {len(X_test):,}\n")
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # PIPELINE
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 tfidf = TfidfVectorizer(tokenizer=c_tokenizer, **TFIDF_PARAMS)
 rf    = RandomForestClassifier(**RF_PARAMS)
@@ -129,9 +129,9 @@ pipeline = Pipeline([
     ("rf",    rf),
 ])
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # CROSS-VALIDATION  (on training fold only)
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 print(f"Running {CV_FOLDS}-fold stratified cross-validation …")
 cv = StratifiedKFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
@@ -139,16 +139,16 @@ cv_scores = cross_val_score(pipeline, X_train, y_train,
                              cv=cv, scoring="accuracy", n_jobs=-1)
 print(f"CV Accuracy:  {cv_scores.mean():.4f} ± {cv_scores.std():.4f}\n")
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # FINAL FIT ON FULL TRAINING SET
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 print("Fitting final model on full training set …")
 pipeline.fit(X_train, y_train)
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # EVALUATE ON HELD-OUT TEST SET
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 y_pred     = pipeline.predict(X_test)
 test_acc   = accuracy_score(y_test, y_pred)
@@ -159,9 +159,9 @@ print(f"{'='*60}\n")
 print("Per-class report:")
 print(classification_report(y_test, y_pred, target_names=class_names))
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # CONFUSION MATRIX
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 cm = confusion_matrix(y_test, y_pred)
 cm_norm = cm.astype("float") / cm.sum(axis=1, keepdims=True)
@@ -185,11 +185,11 @@ plt.yticks(rotation=0, fontsize=9)
 plt.tight_layout()
 plt.savefig("confusion.png", dpi=150)
 plt.close()
-print("Saved confusion matrix  →  confusion.png")
+print("Saved confusion matrix  ->  confusion.png")
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # FEATURE IMPORTANCES
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 feature_names = np.array(pipeline.named_steps["tfidf"].get_feature_names_out())
 importances   = pipeline.named_steps["rf"].feature_importances_
@@ -210,25 +210,25 @@ ax2.set_title(f"Top {top_n} TF-IDF Feature Importances", fontsize=14)
 plt.tight_layout()
 plt.savefig("feature_importance.png", dpi=150)
 plt.close()
-print("Saved feature importances  →  feature_importance.png")
+print("Saved feature importances  ->  feature_importance.png")
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # SAVE MODEL
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 with open(MODEL_PATH, "wb") as fh:
     pickle.dump(pipeline, fh)
-print(f"Saved model pipeline  →  {MODEL_PATH}")
+print(f"Saved model             ->  model.pkl")
 
 with open(LE_PATH, "wb") as fh:
     pickle.dump(class_names, fh)
-print(f"Saved class names     →  {LE_PATH}")
+print(f"Saved label encoder     ->  label_encoder.pkl")
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # QUICK INFERENCE DEMO
-# ──────────────────────────────────────────
+# ------------------------------------------
 
-print("\n── Inference demo ──────────────────────────────────────")
+print("\n-- Inference demo --------------------------------------")
 
 demo_statements = [
     "x = y + 5;",

@@ -77,6 +77,66 @@ const ML_METRICS = {
   ],
 }
 
+const ML_TRAINING_LOG = `Loaded 15,000 samples, 15 classes.
+
+Train : 12,000  |  Test : 3,000
+
+Running 5-fold stratified cross-validation à
+CV Accuracy:  0.9578 ▒ 0.0027
+
+Fitting final model on full training set à
+
+============================================================
+  Test Accuracy : 0.9607  (96.07%)
+============================================================
+
+Per-class report:
+                     precision    recall  f1-score   support
+
+         Assignment       0.94      0.98      0.96       200
+               Loop       1.00      1.00      1.00       200
+        Conditional       0.96      0.99      0.97       200
+        Declaration       0.99      0.92      0.95       200
+      Function Call       0.97      0.94      0.95       200
+             Return       1.00      0.99      1.00       200
+       Array Access       0.95      0.97      0.96       200
+  Pointer Operation       0.91      0.93      0.92       200
+      Struct Access       0.96      0.91      0.93       200
+Increment/Decrement       0.86      0.86      0.86       200
+  Bitwise Operation       1.00      0.99      1.00       200
+ Logical Expression       0.99      0.98      0.99       200
+    Cast Expression       0.95      0.96      0.96       200
+  Memory Allocation       0.98      0.98      0.98       200
+ Exception Handling       0.96      0.99      0.98       200
+
+           accuracy                           0.96      3000
+          macro avg       0.96      0.96      0.96      3000
+       weighted avg       0.96      0.96      0.96      3000
+
+Saved confusion matrix  ->  confusion.png
+Saved feature importances  ->  feature_importance.png
+Saved model             ->  model.pkl
+Saved label encoder     ->  label_encoder.pkl
+
+-- Inference demo --------------------------------------
+Statement                                      Predicted Class
+----------------------------------------------------------------------
+  x = y + 5;                                   Assignment
+  for (int i = 0; i < n; i++) { }              Loop
+  if (count > 10) { }                          Conditional
+  int result = 0;                              Assignment
+  free(ptr);                                   Function Call
+  return value;                                Return
+  arr[i] = 42;                                 Array Access
+  *ptr = x;                                    Assignment
+  node->next = NULL;                           Struct Access
+  x++;                                         Increment/Decrement
+  flags = flags & 0xFF;                        Bitwise Operation
+  ret = (x > 0) && (y < n);                    Logical Expression
+  value = (int) ptr;                           Cast Expression
+  buf = malloc(sizeof(int) * n);               Memory Allocation
+  throw std::runtime_error("err");             Exception Handling`
+
 export default function App() {
   const [page, setPage] = useState('pipeline')
   const [files, setFiles] = useState([])
@@ -336,6 +396,9 @@ function KnowMoreView() {
           <li key={idx}>{item}</li>
         ))}
       </ul>
+
+      <h3>ML Training Log (training_log.txt)</h3>
+      <pre className="tall">{ML_TRAINING_LOG}</pre>
     </div>
   )
 }
@@ -440,6 +503,7 @@ function LLMView({ llm }) {
 
   const responseText = llm.result_text || 'No LLM response text available.'
   const correctedCode = llm.corrected_code || ''
+  const statementSuggestions = llm.statement_suggestions || []
 
   return (
     <div className="llm-wrap">
@@ -448,6 +512,13 @@ function LLMView({ llm }) {
 
       <h3>Intelligent Explanation + Suggestions</h3>
       <pre>{responseText}</pre>
+
+      {statementSuggestions.length > 0 && (
+        <>
+          <h3>Suggested New Statements</h3>
+          <pre>{statementSuggestions.join('\n')}</pre>
+        </>
+      )}
 
       {correctedCode && (
         <>
