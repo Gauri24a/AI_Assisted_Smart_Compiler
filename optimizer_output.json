@@ -1,0 +1,302 @@
+{
+  "phase": "optimizer",
+  "strategies_applied": [],
+  "original_count": 49,
+  "optimized_count": 49,
+  "instructions": [
+    {
+      "op": "funcdef",
+      "dest": null,
+      "a": "add",
+      "b": "['x', 'y']"
+    },
+    {
+      "op": "binop",
+      "dest": "t0",
+      "a": "x",
+      "b": "+ y"
+    },
+    {
+      "op": "assign",
+      "dest": "result",
+      "a": "t0",
+      "b": null
+    },
+    {
+      "op": "return",
+      "dest": null,
+      "a": "result",
+      "b": null
+    },
+    {
+      "op": "funcend",
+      "dest": null,
+      "a": "add",
+      "b": null
+    },
+    {
+      "op": "funcdef",
+      "dest": null,
+      "a": "greet",
+      "b": "['name']"
+    },
+    {
+      "op": "binop",
+      "dest": "t1",
+      "a": "'Hello '",
+      "b": "+ name"
+    },
+    {
+      "op": "assign",
+      "dest": "msg",
+      "a": "t1",
+      "b": null
+    },
+    {
+      "op": "return",
+      "dest": null,
+      "a": "msg",
+      "b": null
+    },
+    {
+      "op": "funcend",
+      "dest": null,
+      "a": "greet",
+      "b": null
+    },
+    {
+      "op": "assign",
+      "dest": "pi",
+      "a": "3.14",
+      "b": null
+    },
+    {
+      "op": "assign",
+      "dest": "x",
+      "a": "5",
+      "b": null
+    },
+    {
+      "op": "binop",
+      "dest": "t2",
+      "a": "x",
+      "b": "+ 10"
+    },
+    {
+      "op": "assign",
+      "dest": "b",
+      "a": "t2",
+      "b": null
+    },
+    {
+      "op": "assign",
+      "dest": "name",
+      "a": "'alice'",
+      "b": null
+    },
+    {
+      "op": "binop",
+      "dest": "t3",
+      "a": "pi",
+      "b": "> 3"
+    },
+    {
+      "op": "jumpif",
+      "dest": null,
+      "a": "t3",
+      "b": "not -> L1"
+    },
+    {
+      "op": "param",
+      "dest": null,
+      "a": "pi",
+      "b": null
+    },
+    {
+      "op": "call",
+      "dest": "t4",
+      "a": "print",
+      "b": "1"
+    },
+    {
+      "op": "jump",
+      "dest": null,
+      "a": "L0",
+      "b": null
+    },
+    {
+      "op": "label",
+      "dest": null,
+      "a": "L1",
+      "b": null
+    },
+    {
+      "op": "binop",
+      "dest": "t5",
+      "a": "pi",
+      "b": "== 3"
+    },
+    {
+      "op": "jumpif",
+      "dest": null,
+      "a": "t5",
+      "b": "not -> L2"
+    },
+    {
+      "op": "assign",
+      "dest": "_",
+      "a": "None",
+      "b": null
+    },
+    {
+      "op": "jump",
+      "dest": null,
+      "a": "L0",
+      "b": null
+    },
+    {
+      "op": "label",
+      "dest": null,
+      "a": "L2",
+      "b": null
+    },
+    {
+      "op": "assign",
+      "dest": "_",
+      "a": "None",
+      "b": null
+    },
+    {
+      "op": "label",
+      "dest": null,
+      "a": "L0",
+      "b": null
+    },
+    {
+      "op": "param",
+      "dest": null,
+      "a": "10",
+      "b": null
+    },
+    {
+      "op": "call",
+      "dest": "t6",
+      "a": "range",
+      "b": "1"
+    },
+    {
+      "op": "assign",
+      "dest": "t7",
+      "a": "0",
+      "b": null
+    },
+    {
+      "op": "call",
+      "dest": "t8",
+      "a": "len",
+      "b": "t6"
+    },
+    {
+      "op": "label",
+      "dest": null,
+      "a": "L3",
+      "b": null
+    },
+    {
+      "op": "binop",
+      "dest": "t9",
+      "a": "t7",
+      "b": "< t8"
+    },
+    {
+      "op": "jumpif",
+      "dest": null,
+      "a": "t9",
+      "b": "not -> L4"
+    },
+    {
+      "op": "call",
+      "dest": "i",
+      "a": "iter_get",
+      "b": "t6 t7"
+    },
+    {
+      "op": "binop",
+      "dest": "t10",
+      "a": "b",
+      "b": "+ i"
+    },
+    {
+      "op": "assign",
+      "dest": "b",
+      "a": "t10",
+      "b": null
+    },
+    {
+      "op": "binop",
+      "dest": "t11",
+      "a": "t7",
+      "b": "+ 1"
+    },
+    {
+      "op": "assign",
+      "dest": "t7",
+      "a": "t11",
+      "b": null
+    },
+    {
+      "op": "jump",
+      "dest": null,
+      "a": "L3",
+      "b": null
+    },
+    {
+      "op": "label",
+      "dest": null,
+      "a": "L4",
+      "b": null
+    },
+    {
+      "op": "label",
+      "dest": null,
+      "a": "L5",
+      "b": null
+    },
+    {
+      "op": "binop",
+      "dest": "t12",
+      "a": "x",
+      "b": "> 0"
+    },
+    {
+      "op": "jumpif",
+      "dest": null,
+      "a": "t12",
+      "b": "not -> L6"
+    },
+    {
+      "op": "binop",
+      "dest": "t13",
+      "a": "x",
+      "b": "- 1"
+    },
+    {
+      "op": "assign",
+      "dest": "x",
+      "a": "t13",
+      "b": null
+    },
+    {
+      "op": "jump",
+      "dest": null,
+      "a": "L5",
+      "b": null
+    },
+    {
+      "op": "label",
+      "dest": null,
+      "a": "L6",
+      "b": null
+    }
+  ]
+}

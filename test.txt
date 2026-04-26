@@ -1,0 +1,16 @@
+# Clean Code: Bubble Sort
+def bubble_sort(arr, n):
+    i = 0
+    while i < n:
+        j = 0
+        while j < n - 1:
+            if arr[j] > arr[j + 1]:
+                temp = arr[j]
+                arr[j] = arr[j + 1]
+                arr[j + 1] = temp
+            j = j + 1
+        i = i + 1
+    return arr
+
+count = 5
+result = bubble_sort(count, count)

@@ -1,4 +1,0 @@
-x = 5;
-y = @invalid;
-z = "unterminated string
-a = 10;

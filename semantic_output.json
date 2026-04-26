@@ -1,0 +1,15 @@
+{
+  "phase": "semantic",
+  "error_count": 8,
+  "errors": [
+    "line 8: 'arr' used before definition",
+    "line 9: 'arr' used before definition",
+    "line 10: 'arr' used before definition",
+    "line 11: 'j' used before definition",
+    "line 12: 'i' used before definition",
+    "line 13: return outside function",
+    "line 13: 'arr' used before definition",
+    "line 16: 'bubble_sort' called before definition"
+  ],
+  "status": "FAIL"
+}

@@ -1,9 +1,0 @@
-pytest>=8.0.0
-pandas
-numpy
-gensim
-tensorflow
-scikit-learn
-google-generativeai
-fastapi
-uvicorn

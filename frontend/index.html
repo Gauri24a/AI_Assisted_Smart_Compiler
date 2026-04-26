@@ -1,12 +1,186 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Assisted Smart Compiler</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI-Assisted Smart Compiler</title>
+  <meta name="description" content="A Python compiler with three ML layers — statement cache, parser dispatch hint, and optimization strategy predictor. See each compilation phase live." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+ 
+<!-- ── Navbar ─────────────────────────────────────────────────── -->
+<nav class="navbar">
+  <div class="navbar-brand">
+    <span class="dot"></span>
+    AI Smart Compiler
+  </div>
+  <div class="navbar-links">
+    <a href="index.html" class="active" id="nav-compiler">Compiler</a>
+    <a href="info.html" id="nav-info">Info &amp; FAQ</a>
+  </div>
+</nav>
+
+<!-- ── Main Layout ────────────────────────────────────────────── -->
+<main class="compiler-layout">
+
+  <!-- Editor Column -->
+  <div class="editor-col">
+
+    <!-- Toolbar -->
+    <div class="editor-toolbar">
+      <span class="panel-title">Editor</span>
+      <div style="display:flex;gap:0.4rem;align-items:center;">
+        <button class="btn btn-ghost btn-sm" id="btn-clear" title="Clear editor">Clear</button>
+        <button class="btn btn-primary btn-sm" id="btn-compile">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M5 3.5l7 4.5-7 4.5V3.5z"/>
+          </svg>
+          Compile
+        </button>
+      </div>
+    </div>
+
+    <!-- Code textarea -->
+    <textarea
+      class="code-editor"
+      id="code-editor"
+      spellcheck="false"
+      autocomplete="off"
+      autocorrect="off"
+      autocapitalize="off"
+      placeholder="# Write your Python here...&#10;&#10;x = 42&#10;print(x)"
+    ></textarea>
+
+    <!-- Sample buttons -->
+    <div class="editor-footer">
+      <div style="font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-3);margin-bottom:0.5rem;">
+        Sample Code
+      </div>
+      <div class="sample-grid" id="sample-grid">
+        <button class="sample-btn clean"   data-sample="hello">Hello World</button>
+        <button class="sample-btn clean"   data-sample="fibonacci">Fibonacci</button>
+        <button class="sample-btn has-err" data-sample="lex_parser">Lex + Parser</button>
+        <button class="sample-btn has-err" data-sample="parser_sem">Parser + Semantic</button>
+        <button class="sample-btn has-err" data-sample="lex_sem">Lex + Semantic</button>
+        <button class="sample-btn has-err" data-sample="all_three">All Three</button>
+        <button class="sample-btn"         data-sample="blank">Blank</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Output Column -->
+  <div class="output-col">
+
+    <!-- Phase tabs -->
+    <div class="output-tabs-bar">
+      <div class="tabs" id="phase-tabs">
+        <button class="tab active" data-phase="lexer"     id="tab-lexer">Tokens</button>
+        <button class="tab"        data-phase="parser"    id="tab-parser">AST</button>
+        <button class="tab"        data-phase="semantic"  id="tab-semantic">Semantic</button>
+        <button class="tab"        data-phase="ir"        id="tab-ir">IR</button>
+        <button class="tab"        data-phase="optimizer" id="tab-optimizer">Optimizer</button>
+        <button class="tab"        data-phase="assembly"  id="tab-assembly">Assembly</button>
+      </div>
+    </div>
+
+    <!-- Phase panes -->
+    <div class="output-content" id="output-content">
+
+      <!-- Lexer pane -->
+      <div class="phase-pane active" id="pane-lexer">
+        <div class="pane-inner" id="inner-lexer">
+          <div class="empty-state">
+            <div class="empty-icon">⬡</div>
+            <div>Tokens will appear here after compilation.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Parser pane -->
+      <div class="phase-pane" id="pane-parser">
+        <div class="pane-inner" id="inner-parser">
+          <div class="empty-state">
+            <div class="empty-icon">⟨⟩</div>
+            <div>AST will appear here after compilation.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Semantic pane -->
+      <div class="phase-pane" id="pane-semantic">
+        <div class="pane-inner" id="inner-semantic">
+          <div class="empty-state">
+            <div class="empty-icon">✦</div>
+            <div>Semantic analysis results will appear here.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- IR pane -->
+      <div class="phase-pane" id="pane-ir">
+        <div class="pane-inner" id="inner-ir">
+          <div class="empty-state">
+            <div class="empty-icon">≡</div>
+            <div>IR instructions will appear here after compilation.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Optimizer pane -->
+      <div class="phase-pane" id="pane-optimizer">
+        <div class="pane-inner" id="inner-optimizer">
+          <div class="empty-state">
+            <div class="empty-icon">⚡</div>
+            <div>Optimizer results will appear here after compilation.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Assembly pane -->
+      <div class="phase-pane" id="pane-assembly">
+        <div class="pane-inner" id="inner-assembly">
+          <div class="empty-state">
+            <div class="empty-icon">⬟</div>
+            <div>Assembly output will appear here after compilation.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Latency bar -->
+    <div class="latency-panel" id="latency-panel" style="display:none;">
+      <div>
+        <div class="latency-label">
+          <span>ML Compiler</span>
+          <span id="ml-time-label" style="color:var(--accent)">— ms</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill ml-bar" id="ml-bar"></div>
+        </div>
+      </div>
+      <div>
+        <div class="latency-label">
+          <span>Traditional Compiler (estimated)</span>
+          <span id="trad-time-label" style="color:var(--orange)">— ms</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill trad-bar" id="trad-bar"></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+        <span class="speedup-chip" id="speedup-chip">
+          <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0l2 6h6l-5 4 2 6-5-4-5 4 2-6L0 6h6z"/></svg>
+          <span id="speedup-val">—</span>
+        </span>
+        <span style="font-size:0.75rem;color:var(--text-3);" id="timing-breakdown"></span>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="script.js"></script>
+</body>
 </html>

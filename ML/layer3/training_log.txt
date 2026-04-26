@@ -1,0 +1,71 @@
+venv\Scripts\python.exe D:\AI_Assisted_Smart_Compiler\new\ML\layer3\train_layer3.py           
+Loaded 8,000 samples.
+
+Train : 6,400  |  Test : 1,600
+
+Running 5-fold cross-validation …
+  constant_fold         F1: 0.9420 ± 0.0070
+  dead_code             F1: 0.9136 ± 0.0047
+  loop_unroll           F1: 0.8130 ± 0.0277
+  inline                F1: 0.8922 ± 0.0052
+
+Fitting final model …
+
+── constant_fold ──
+              precision    recall  f1-score   support
+
+        skip       0.96      0.95      0.95       770
+       apply       0.95      0.96      0.95       830
+
+    accuracy                           0.95      1600
+   macro avg       0.95      0.95      0.95      1600
+weighted avg       0.95      0.95      0.95      1600
+  Accuracy: 0.9525
+
+── dead_code ──
+              precision    recall  f1-score   support
+
+        skip       0.94      0.95      0.94      1000
+       apply       0.91      0.90      0.91       600
+
+    accuracy                           0.93      1600
+   macro avg       0.93      0.92      0.93      1600
+weighted avg       0.93      0.93      0.93      1600
+  Accuracy: 0.9300
+
+── loop_unroll ──
+              precision    recall  f1-score   support
+
+        skip       0.95      0.97      0.96      1275
+       apply       0.88      0.80      0.84       325
+
+    accuracy                           0.94      1600
+   macro avg       0.92      0.89      0.90      1600
+weighted avg       0.94      0.94      0.94      1600
+  Accuracy: 0.9381
+
+── inline ──
+              precision    recall  f1-score   support
+
+        skip       0.95      0.96      0.96      1070
+       apply       0.91      0.91      0.91       530
+
+    accuracy                           0.94      1600
+   macro avg       0.93      0.93      0.93      1600
+weighted avg       0.94      0.94      0.94      1600
+  Accuracy: 0.9406
+
+Mean accuracy across strategies: 0.9403
+
+Saved report  →  report_layer3.txt
+Saved feature importances  →  feature_importance_layer3.png
+Saved model  →  model_layer3.pkl
+
+── Inference demo ──────────────────────────────────────
+Block                                  CF    DC    LU    IL  Applied Strategies
+--------------------------------------------------------------------------------
+  3-instr constant block                0     1     0     1  dead_code, inline
+  10-instr loop, no calls               1     1     1     0  constant_fold, dead_code, loop_unroll
+  5-instr with 2 calls                  0     0     0     1  inline
+  40-instr large mixed                  0     0     0     0  none
+  6-instr dead-assign heavy             0     1     0     0  dead_code

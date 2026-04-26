@@ -1,0 +1,135 @@
+{
+  "phase": "ast",
+  "status": "FAIL",
+  "error_count": 4,
+  "errors": [
+    "line 7: expected :, got '['",
+    "line 8: unexpected token '['",
+    "line 9: unexpected token '['",
+    "line 10: unexpected token '['"
+  ],
+  "tree": {
+    "node": "Program",
+    "body": [
+      {
+        "node": "Assign",
+        "target": {
+          "node": "Identifier",
+          "name": "temp",
+          "line": 8
+        },
+        "value": {
+          "node": "Identifier",
+          "name": "arr",
+          "line": 8
+        },
+        "line": 8
+      },
+      {
+        "node": "Identifier",
+        "name": "arr",
+        "line": 9
+      },
+      {
+        "node": "Identifier",
+        "name": "arr",
+        "line": 10
+      },
+      {
+        "node": "Assign",
+        "target": {
+          "node": "Identifier",
+          "name": "j",
+          "line": 11
+        },
+        "value": {
+          "node": "BinOp",
+          "left": {
+            "node": "Identifier",
+            "name": "j",
+            "line": 11
+          },
+          "op": "+",
+          "right": {
+            "node": "Literal",
+            "value": 1,
+            "kind": "int"
+          }
+        },
+        "line": 11
+      },
+      {
+        "node": "Assign",
+        "target": {
+          "node": "Identifier",
+          "name": "i",
+          "line": 12
+        },
+        "value": {
+          "node": "BinOp",
+          "left": {
+            "node": "Identifier",
+            "name": "i",
+            "line": 12
+          },
+          "op": "+",
+          "right": {
+            "node": "Literal",
+            "value": 1,
+            "kind": "int"
+          }
+        },
+        "line": 12
+      },
+      {
+        "node": "Return",
+        "value": {
+          "node": "Identifier",
+          "name": "arr",
+          "line": 13
+        },
+        "line": 13
+      },
+      {
+        "node": "Assign",
+        "target": {
+          "node": "Identifier",
+          "name": "count",
+          "line": 15
+        },
+        "value": {
+          "node": "Literal",
+          "value": 5,
+          "kind": "int"
+        },
+        "line": 15
+      },
+      {
+        "node": "Assign",
+        "target": {
+          "node": "Identifier",
+          "name": "result",
+          "line": 16
+        },
+        "value": {
+          "node": "FuncCall",
+          "name": "bubble_sort",
+          "args": [
+            {
+              "node": "Identifier",
+              "name": "count",
+              "line": 16
+            },
+            {
+              "node": "Identifier",
+              "name": "count",
+              "line": 16
+            }
+          ],
+          "line": 16
+        },
+        "line": 16
+      }
+    ]
+  }
+}

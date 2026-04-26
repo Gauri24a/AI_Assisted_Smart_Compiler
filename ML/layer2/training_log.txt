@@ -1,0 +1,60 @@
+venv\Scripts\python.exe D:\AI_Assisted_Smart_Compiler\new\ML\layer2\train_layer2.py
+Loaded 15,000 samples, 15 classes.
+
+Train : 12,000  |  Test : 3,000
+
+Running 5-fold stratified cross-validation …
+CV Accuracy:  1.0000 ± 0.0000
+
+Fitting final model on full training set …
+
+============================================================
+  Test Accuracy : 1.0000  (100.00%)
+============================================================
+
+              precision    recall  f1-score   support
+
+  assignment       1.00      1.00      1.00       200
+     funcdef       1.00      1.00      1.00       200
+    classdef       1.00      1.00      1.00       200
+    for_loop       1.00      1.00      1.00       200
+  while_loop       1.00      1.00      1.00       200
+     if_stmt       1.00      1.00      1.00       200
+ return_stmt       1.00      1.00      1.00       200
+ import_stmt       1.00      1.00      1.00       200
+   func_call       1.00      1.00      1.00       200
+   list_expr       1.00      1.00      1.00       200
+   dict_expr       1.00      1.00      1.00       200
+ lambda_expr       1.00      1.00      1.00       200
+  try_except       1.00      1.00      1.00       200
+  raise_stmt       1.00      1.00      1.00       200
+ assert_stmt       1.00      1.00      1.00       200
+
+    accuracy                           1.00      3000
+   macro avg       1.00      1.00      1.00      3000
+weighted avg       1.00      1.00      1.00      3000
+
+Saved confusion matrix       →  confusion_layer2.png
+Saved feature importances    →  feature_importance_layer2.png
+Saved model                  →  model_layer2.pkl
+Saved label encoder          →  label_encoder_layer2.pkl
+
+── Inference demo ──────────────────────────────────────
+Token Sequence                                           Predicted        Expected
+------------------------------------------------------------------------------------------
+  IDENTIFIER OPERATOR INTEGER                            assignment       ✓ assignment
+  KW_def IDENTIFIER DELIMITER IDENTIFIER DELIMITER DELIMITER  funcdef          ✓ funcdef
+  KW_class IDENTIFIER DELIMITER IDENTIFIER DELIMITER DELIMITER  classdef         ✓ classdef
+  KW_for IDENTIFIER KW_in IDENTIFIER DELIMITER           for_loop         ✓ for_loop
+  KW_while IDENTIFIER OPERATOR INTEGER DELIMITER         while_loop       ✓ while_loop
+  KW_if IDENTIFIER OPERATOR INTEGER DELIMITER            if_stmt          ✓ if_stmt
+  KW_return IDENTIFIER                                   return_stmt      ✓ return_stmt
+  KW_import IDENTIFIER                                   import_stmt      ✓ import_stmt
+  IDENTIFIER DELIMITER IDENTIFIER DELIMITER              func_call        ✓ func_call
+  IDENTIFIER OPERATOR LBRACKET IDENTIFIER RBRACKET       list_expr        ✓ list_expr
+  IDENTIFIER OPERATOR LBRACE STRING DELIMITER IDENTIFIER RBRACE  dict_expr        ✓ dict_expr
+  IDENTIFIER OPERATOR KW_lambda IDENTIFIER DELIMITER IDENTIFIER  lambda_expr      ✓ lambda_expr
+  KW_try DELIMITER                                       try_except       ✓ try_except
+  KW_raise IDENTIFIER DELIMITER STRING DELIMITER         raise_stmt       ✓ raise_stmt
+  KW_assert IDENTIFIER OPERATOR INTEGER                  assert_stmt      ✓ assert_stmt
+(.venv) PS D:\AI_Assisted_Smart_Compiler> 

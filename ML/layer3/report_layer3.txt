@@ -1,0 +1,49 @@
+============================================================
+  Layer 3 — Optimization Strategy Classifier Report
+============================================================
+
+── constant_fold ──
+              precision    recall  f1-score   support
+
+        skip       0.96      0.95      0.95       770
+       apply       0.95      0.96      0.95       830
+
+    accuracy                           0.95      1600
+   macro avg       0.95      0.95      0.95      1600
+weighted avg       0.95      0.95      0.95      1600
+  Accuracy: 0.9525
+
+── dead_code ──
+              precision    recall  f1-score   support
+
+        skip       0.94      0.95      0.94      1000
+       apply       0.91      0.90      0.91       600
+
+    accuracy                           0.93      1600
+   macro avg       0.93      0.92      0.93      1600
+weighted avg       0.93      0.93      0.93      1600
+  Accuracy: 0.9300
+
+── loop_unroll ──
+              precision    recall  f1-score   support
+
+        skip       0.95      0.97      0.96      1275
+       apply       0.88      0.80      0.84       325
+
+    accuracy                           0.94      1600
+   macro avg       0.92      0.89      0.90      1600
+weighted avg       0.94      0.94      0.94      1600
+  Accuracy: 0.9381
+
+── inline ──
+              precision    recall  f1-score   support
+
+        skip       0.95      0.96      0.96      1070
+       apply       0.91      0.91      0.91       530
+
+    accuracy                           0.94      1600
+   macro avg       0.93      0.93      0.93      1600
+weighted avg       0.94      0.94      0.94      1600
+  Accuracy: 0.9406
+
+Mean accuracy across strategies: 0.9403
